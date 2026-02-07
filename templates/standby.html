@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Search</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="hint">Ready</div>
+      <div class="title">Leave this screen open</div>
+      <div class="sub">Turn the phone face down.</div>
+      <div class="status" id="status">Waiting…</div>
+    </div>
+  </div>
+
+  <script>
+    // Keep screen awake (works on many mobile browsers)
+    let wakeLock = null;
+    async function keepAwake() {
+      try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
+    }
+    keepAwake();
+
+    // Poll the server for readiness; if ready, auto-redirect to real Google search.
+    async function poll() {
+      try {
+        const r = await fetch("/latest");
+        const data = await r.json();
+        if (data.text && data.text.trim().length) {
+          document.getElementById("status").innerText = "Found. Redirecting…";
+          // Redirect to /search (server will redirect to Google)
+          location.href = "/search";
+          return;
+        }
+      } catch (e) {}
+      setTimeout(poll, 600);
+    }
+    poll();
+  </script>
+</body>
+</html>
